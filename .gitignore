@@ -1,0 +1,52 @@
+# Node.js dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Build files and outputs
+dist/
+build/
+
+# Cache and temporary files
+.cache/
+tmp/
+temp/
+
+# Editor specific files
+.vscode/
+.idea/
+*.swp
+
+# Coverage reports
+coverage/
+
+# Test files
+*.test.js
+*.spec.js
+jest.config.js
+
+# Package locks (if using Yarn or npm, keep one)
+yarn.lock
+# or
+package-lock.json
+
+# Monorepo-specific files
+lerna-debug.log
+
+# Optional: Ignore sensitive config files
+config/*.json
+!config/default.json
