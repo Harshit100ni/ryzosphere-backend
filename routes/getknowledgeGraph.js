@@ -11,6 +11,7 @@ router.get("/", async (req, res) => {
     const state = req.query.state || null;
     const product = req.query.product || null;
     const type = req.query.type || null;
+    const subType = req.query.subType || "All";
 
     let nodes = new Map();
     let links = [];
@@ -68,6 +69,19 @@ router.get("/", async (req, res) => {
 
       const typeResult = await session.run(typeQuery, typeParams);
       processResult(typeResult, nodes, links);
+
+      // Sub Type based Query
+
+      let subTypeQuery = `MATCH (n)-[r:HAS_SUBTYPE]->(m:Organization_Sub_Type)`;
+      let subTypeParams = {};
+
+      if (subType !== "All") {
+        subTypeQuery += ` WHERE m.NodeID = $subTypeName`;
+        subTypeParams.subTypeName = subType;
+      }
+      subTypeQuery += ` RETURN n, r, m LIMIT 100;`;
+      const subTyperesult = await session.run(subTypeQuery, subTypeParams);
+      processResult(subTyperesult, nodes, links);
 
       return res.json({
         success: true,
