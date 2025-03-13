@@ -4,58 +4,66 @@ const { getDriver } = require("../neo4jConnection");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  const driver = getDriver(); // Now it's safe to use getDriver()
+  const driver = getDriver();
   const session = driver.session();
+
   try {
-    // Query to fetch all nodes and relationships from the database
-    const result = await session.run(
-      "MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 25"
-    );
+    const state = req.query.state || null;
+    const product = req.query.product || null;
 
-    // Collect all unique nodes, relationships, and links
-    const nodes = [];
-    const links = [];
+    // const { state = null, product = null } = req.query;
+    let nodes = new Map();
+    let links = [];
 
-    result.records.forEach((record) => {
-      const startNode = record.get("n").properties;
-      const endNode = record.get("m").properties;
-      const relationship = record.get("r");
+    if (state && product) {
+      let productQuery = `
+        MATCH (n)-[r:HANDLES_PRODUCT]->(m:Product_Tags)
+      `;
+      let productParams = {};
 
-      // Helper function to transform node properties
-      const transformNode = (node) => ({
-        id: node.id || node.NodeID || "", // Ensure NodeID is used if id is missing
-        name: node.NodeID,
-        labels: ["Node"], // Static label for nodes
-        type: node.type || "",
-        services: node.services
-          ? node.services.split(";").map((s) => s.trim())
-          : [],
-        aum: node.aum || "",
-        riskLevel: node.risk_level || "",
-        location: node.location || "",
-        notes: node.notes || "",
-      });
-
-      // Add start node to nodes array if not already added
-      if (!nodes.some((n) => n.id === startNode.id)) {
-        nodes.push(transformNode(startNode));
+      // Add WHERE clause only if product is not "All"
+      if (product !== "All") {
+        productQuery += ` WHERE m.NodeID = $productName`;
+        productParams.productName = product;
       }
 
-      // Add end node to nodes array if not already added
-      if (!nodes.some((n) => n.id === endNode.id)) {
-        nodes.push(transformNode(endNode));
+      productQuery += ` RETURN n, r, m LIMIT 100;`;
+
+      const productResult = await session.run(productQuery, productParams);
+      processResult(productResult, nodes, links);
+
+      // Base query for state
+      let stateQuery = `
+        MATCH (n)-[r:HAS_STATE]->(m:State)
+      `;
+      let stateParams = {};
+
+      // Add WHERE clause only if state is not "All"
+      if (state !== "All") {
+        stateQuery += ` WHERE m.NodeID = $stateName`;
+        stateParams.stateName = state;
       }
 
-      // Add the relationship to the links array
-      links.push({
-        source: startNode.id,
-        target: endNode.id,
-        relationship: relationship.type,
-      });
-    });
+      stateQuery += ` RETURN n, r, m LIMIT 100;`;
 
-    // Send response with nodes and links
-    res.json({
+      const stateResult = await session.run(stateQuery, stateParams);
+      processResult(stateResult, nodes, links);
+
+      return res.json({
+        success: true,
+        nodes: Array.from(nodes.values()),
+        links,
+      });
+    }
+
+    console.log("Fetching all nodes");
+    const generalQuery = `
+      MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 25;
+    `;
+    const generalResult = await session.run(generalQuery);
+    processResult(generalResult, nodes, links);
+
+    return res.json({
       success: true,
       nodes: Array.from(nodes.values()),
       links,
@@ -64,9 +72,49 @@ router.get("/", async (req, res) => {
     console.error("Error fetching knowledge graph:", error);
     res.status(500).json({ success: false, message: "Error fetching data" });
   } finally {
-    // Close the session
-    // await session.close();
+    await session.close();
   }
 });
+
+// ✅ Helper function to process query results
+const processResult = (result, nodes, links) => {
+  result.records.forEach((record) => {
+    const startNode = record.get("n")?.properties || {};
+    const endNode = record.get("m")?.properties || {};
+    const relationship = record.get("r");
+
+    // Transform node properties
+    const transformNode = (node) => ({
+      id: node.NodeID || "",
+      name: node.NodeID || "",
+      labels: ["Node"],
+      type: node.type || "",
+      services: node.services
+        ? node.services.split(";").map((s) => s.trim())
+        : [],
+      aum: node.aum || "",
+      riskLevel: node.risk_level || "",
+      location: node.location || "",
+      notes: node.notes || "",
+    });
+
+    // Store unique nodes
+    if (startNode.NodeID && !nodes.has(startNode.NodeID)) {
+      nodes.set(startNode.NodeID, transformNode(startNode));
+    }
+    if (endNode.NodeID && !nodes.has(endNode.NodeID)) {
+      nodes.set(endNode.NodeID, transformNode(endNode));
+    }
+
+    // Store relationships
+    if (relationship) {
+      links.push({
+        source: startNode.NodeID,
+        target: endNode.NodeID,
+        relationship: relationship.type,
+      });
+    }
+  });
+};
 
 module.exports = router;
