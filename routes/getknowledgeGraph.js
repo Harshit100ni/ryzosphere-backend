@@ -10,12 +10,12 @@ router.get("/", async (req, res) => {
   try {
     const state = req.query.state || null;
     const product = req.query.product || null;
+    const type = req.query.type || null;
 
-    // const { state = null, product = null } = req.query;
     let nodes = new Map();
     let links = [];
 
-    if (state && product) {
+    if (state && product && type) {
       let productQuery = `
         MATCH (n)-[r:HANDLES_PRODUCT]->(m:Product_Tags)
       `;
@@ -48,6 +48,26 @@ router.get("/", async (req, res) => {
 
       const stateResult = await session.run(stateQuery, stateParams);
       processResult(stateResult, nodes, links);
+
+      // Base query for state
+
+      //  Type Query ------------------------------------
+
+      let typeQuery = `
+        MATCH (n)-[r:HAS_TYPE]->(m:Organization_Type)
+      `;
+      let typeParams = {};
+
+      // Add WHERE clause only if state is not "All"
+      if (type !== "All") {
+        typeQuery += ` WHERE m.NodeID = $type`;
+        typeParams.type = type;
+      }
+
+      typeQuery += ` RETURN n, r, m LIMIT 100;`;
+
+      const typeResult = await session.run(typeQuery, typeParams);
+      processResult(typeResult, nodes, links);
 
       return res.json({
         success: true,
