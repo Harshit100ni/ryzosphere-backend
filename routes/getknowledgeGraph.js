@@ -113,44 +113,6 @@ const runQuery = async (session, query, params, nodes, links) => {
   const result = await session.run(query, params);
   processResult(result, nodes, links);
 };
-
-// ✅ Helper function to process query results
-// const processResult = (result, nodes, links) => {
-//   result.records.forEach((record) => {
-//     const startNode = record.get("n")?.properties || {};
-//     const endNode = record.get("m")?.properties || {};
-//     const relationship = record.get("r");
-
-//     const transformNode = (node) => ({
-//       id: node.NodeID || "",
-//       name: node.NodeID || "",
-//       labels: ["Node"],
-//       type: node.type || "",
-//       services: node.services
-//         ? node.services.split(";").map((s) => s.trim())
-//         : [],
-//       aum: node.aum || "",
-//       riskLevel: node.risk_level || "",
-//       location: node.location || "",
-//       notes: node.notes || "",
-//     });
-
-//     if (startNode.NodeID && !nodes.has(startNode.NodeID)) {
-//       nodes.set(startNode.NodeID, transformNode(startNode));
-//     }
-//     if (endNode.NodeID && !nodes.has(endNode.NodeID)) {
-//       nodes.set(endNode.NodeID, transformNode(endNode));
-//     }
-
-//     if (relationship) {
-//       links.push({
-//         source: startNode.NodeID,
-//         target: endNode.NodeID,
-//         relationship: relationship.type,
-//       });
-//     }
-//   });
-// };
 const processResult = (result, nodes, links) => {
   result.records.forEach((record) => {
     const startNode = record.get("n")?.properties || {};
