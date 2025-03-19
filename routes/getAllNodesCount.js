@@ -25,7 +25,7 @@ router.get("/", async (req, res) => {
       value: record.get("value").value.low, // Handle Neo4j Integer type
     }));
 
-    res.status(200).json({ status: "UP", data: nodesCount });
+    res.status(200).json({ status: 200, data: nodesCount });
   } catch (error) {
     console.error("Error fetching node type counts:", error);
     res.status(500).json({ status: "DOWN", message: "Database query failed!" });
