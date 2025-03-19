@@ -12,6 +12,7 @@ const getStates = require("../getStateList");
 const getProductTags = require("../getProductTags");
 const getOrgType = require("../getOrgType");
 const getOrgSubType = require("../getOrgSubType");
+const nodeTypeCount = require("../getAllNodesCount");
 
 router.use("/signals", signalsRoutes);
 router.use("/suggestions", suggestionsRoutes);
@@ -24,5 +25,6 @@ router.use("/state", getStates);
 router.use("/product", getProductTags);
 router.use("/org-type", getOrgType);
 router.use("/org-sub-type", getOrgSubType);
+router.use("/node-type-counts", nodeTypeCount);
 
 module.exports = router;

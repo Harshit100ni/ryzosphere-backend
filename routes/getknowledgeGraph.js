@@ -26,7 +26,7 @@ router.get("/", async (req, res) => {
       console.log("Running Default Query: Fetching all nodes");
 
       const defaultQuery = `
-          MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 100;
+          MATCH (n)-[r]->(m) RETURN n, r, m;
         `;
       const defaultResult = await session.run(defaultQuery);
       processResult(defaultResult, nodes, links);
@@ -45,7 +45,7 @@ router.get("/", async (req, res) => {
         `
           MATCH (n)-[r:HANDLES_PRODUCT]->(m:Product_Tags)
           WHERE m.NodeID = $productName
-          RETURN n, r, m LIMIT 100;
+          RETURN n, r, m;
         `,
         { productName: product },
         nodes,
@@ -59,7 +59,7 @@ router.get("/", async (req, res) => {
         `
           MATCH (n)-[r:HAS_STATE]->(m:State)
           WHERE m.NodeID = $stateName
-          RETURN n, r, m LIMIT 100;
+          RETURN n, r, m;
         `,
         { stateName: state },
         nodes,
@@ -73,7 +73,7 @@ router.get("/", async (req, res) => {
         `
           MATCH (n)-[r:HAS_TYPE]->(m:Organization_Type)
           WHERE m.NodeID = $type
-          RETURN n, r, m LIMIT 100;
+          RETURN n, r, m;
         `,
         { type },
         nodes,
@@ -87,7 +87,7 @@ router.get("/", async (req, res) => {
         `
           MATCH (n)-[r:HAS_SUBTYPE]->(m:Organization_Sub_Type)
           WHERE m.NodeID = $subTypeName
-          RETURN n, r, m LIMIT 100;
+          RETURN n, r, m;
         `,
         { subTypeName: subType },
         nodes,
