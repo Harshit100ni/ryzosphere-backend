@@ -5,6 +5,10 @@ const URI = process.env.NEO4J_URI;
 const USER = process.env.NEO4J_USER;
 const PASSWORD = process.env.NEO4J_PASSWORD;
 
+console.log(URI);
+console.log(USER);
+console.log(PASSWORD);
+
 let driver;
 
 async function initNeo4j() {
